@@ -46,7 +46,7 @@ if not exist vault (
 echo %VAULT_TOKEN%> vault\.vault-token
 
 (
-echo {{- with secret "secret/data/%VAULT_ROLE%/env" -}}
+echo {{- with secret "secret/data/%VAULT_ROLE%" -}}
 echo {{- range $key, $value := .Data.data }}
 echo {{ $key }}={{ $value }}
 echo {{- end }}

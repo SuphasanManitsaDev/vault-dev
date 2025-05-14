@@ -36,8 +36,8 @@ docker exec -it vault sh
 export VAULT_ADDR='http://localhost:8200'
 export VAULT_TOKEN='root-token'
 
-vault kv put secret/frontend/env API_URL=http://frontend.com API_KEY=frontend-key
-vault kv put secret/backend/env DB_URL=postgres://db BACKEND_KEY=super-secret
+vault kv put secret/frontend API_URL=http://frontend.com API_KEY=frontend-key
+vault kv put secret/backend DB_URL=postgres://db BACKEND_KEY=super-secret
 ```
 
 ### 4. Create Policies
@@ -45,17 +45,17 @@ vault kv put secret/backend/env DB_URL=postgres://db BACKEND_KEY=super-secret
 #### `frontend-readonly.hcl`
 
 ```hcl
-path "secret/data/frontend/*" {
+echo 'path "secret/data/frontend/*" {
   capabilities = ["read", "list"]
-}
+}' > frontend-readonly.hcl
 ```
 
 #### `backend-readonly.hcl`
 
 ```hcl
-path "secret/data/backend/*" {
+echo 'path "secret/data/backend/*" {
   capabilities = ["read", "list"]
-}
+}' > backend-readonly.hcl
 ```
 
 Apply the policies:
