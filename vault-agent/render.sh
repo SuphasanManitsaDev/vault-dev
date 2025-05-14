@@ -38,7 +38,7 @@ echo "$VAULT_TOKEN" > vault/.vault-token
 
 # Generate Vault template to fetch secrets for the given role
 cat > vault/template.tpl <<EOF
-{{- with secret "secret/data/$VAULT_ROLE/env" -}}
+{{- with secret "secret/data/$VAULT_ROLE" -}}
 {{- range \$key, \$value := .Data.data }}
 {{ \$key }}={{ \$value }}
 {{- end }}

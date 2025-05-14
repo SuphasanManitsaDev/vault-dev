@@ -44,16 +44,16 @@ vault kv put secret/backend DB_URL=postgres://db BACKEND_KEY=super-secret
 
 #### `frontend-readonly.hcl`
 
-```hcl
-echo 'path "secret/data/frontend/*" {
+```bash
+echo 'path "secret/data/frontend" {
   capabilities = ["read", "list"]
 }' > frontend-readonly.hcl
 ```
 
 #### `backend-readonly.hcl`
 
-```hcl
-echo 'path "secret/data/backend/*" {
+```bash
+echo 'path "secret/data/backend" {
   capabilities = ["read", "list"]
 }' > backend-readonly.hcl
 ```
@@ -68,8 +68,8 @@ vault policy write backend-readonly backend-readonly.hcl
 ### 5. Generate Tokens
 
 ```bash
-vault token create -policy="frontend-readonly" -orphan -period=768h -display-name="frontend"
-vault token create -policy="backend-readonly" -orphan -period=768h -display-name="backend"
+vault token create -policy="frontend-readonly" -orphan -ttl=0 -display-name="frontend"
+vault token create -policy="backend-readonly" -orphan -ttl=0 -display-name="backend"
 ```
 
 > 📌 Copy the generated token for Agent usage
