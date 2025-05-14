@@ -54,7 +54,7 @@ docker run --rm \
   -w /vault/config/vault \
   -e VAULT_ADDR="$VAULT_ADDR" \
   hashicorp/vault:latest \
-  agent -config=/vault/config/agent.hcl > vault/render.log 2>&1 &
+  agent -config=/vault/config/agent.hcl > /dev/null 2>&1 &
 
 VAULT_PID=$!
 
