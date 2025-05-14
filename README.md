@@ -1,160 +1,176 @@
 # 🔐 Vault Agent .env Renderer
 
-ระบบนี้ช่วยให้คุณสามารถ **ดึง secrets จาก HashiCorp Vault** มาแปลงเป็นไฟล์ `.env` ได้อย่างอัตโนมัติ  
-โดยรองรับการใช้งานแบบ dynamic เช่นกำหนด `server`, `role`, และ `token` ได้ง่าย ๆ ผ่าน `.env.vault`
+This tool allows you to **securely fetch secrets from HashiCorp Vault** and render them into a local `.env` file.  
+It supports dynamic environments with flexible configuration via `.env.vault`.
 
 ---
 
 ## 📦 Features
 
-- ✅ Render secrets จาก Vault KV (v2) เป็น `.env`
-- ✅ รองรับหลาย role (เช่น `frontend`, `backend`)
+- ✅ Render secrets from Vault KV (v2) into `.env`
+- ✅ Supports multiple roles (e.g., `frontend`, `backend`)
 - ✅ Dynamic Vault server address (`VAULT_ADDR`)
-- ✅ ใช้ static `agent.hcl` + dynamic ENV
-- ✅ ใช้งานได้ทั้งใน CI/CD และ local dev
-- ✅ รองรับทั้ง `render.sh` (Linux/macOS) และ `render.bat` (Windows)
+- ✅ Static `agent.hcl` + dynamic runtime configuration
+- ✅ Works in local dev and CI/CD environments
+- ✅ Cross-platform support for `render.sh` (Linux/macOS) and `render.bat` (Windows)
 
 ---
 
-## 🚀 Server-Side Setup (ครั้งเดียว)
+## 🚀 Server Setup (One-Time)
 
 ### 1. Start Vault Server
 
-````bash
+```bash
 docker compose -f docker-compose.server.yml up -d
-````
+```
 
-### 2. เข้าไปใน Container
+### 2. Access Vault Container
 
-````bash
+```bash
 docker exec -it vault sh
-````
+```
 
-### 3. กำหนด Secrets
+### 3. Define Secrets
 
-````bash
+```bash
 export VAULT_ADDR='http://localhost:8200'
 export VAULT_TOKEN='root-token'
 
 vault kv put secret/frontend/env API_URL=http://frontend.com API_KEY=frontend-key
 vault kv put secret/backend/env DB_URL=postgres://db BACKEND_KEY=super-secret
-````
+```
 
-### 4. สร้าง Policy สำหรับแต่ละ Role
+### 4. Create Policies
 
-#### ➤ frontend-readonly.hcl
+#### `frontend-readonly.hcl`
 
-````hcl
-cat > frontend-readonly.hcl <<EOF
+```hcl
 path "secret/data/frontend/*" {
   capabilities = ["read", "list"]
 }
-EOF
-````
+```
 
-#### ➤ backend-readonly.hcl
+#### `backend-readonly.hcl`
 
-````hcl
-cat > backend-readonly.hcl <<EOF
+```hcl
 path "secret/data/backend/*" {
   capabilities = ["read", "list"]
 }
-EOF
-````
+```
 
-#### ➤ Apply Policies
+Apply the policies:
 
-````bash
+```bash
 vault policy write frontend-readonly frontend-readonly.hcl
 vault policy write backend-readonly backend-readonly.hcl
-````
+```
 
-### 5. สร้าง Token ตาม Role
+### 5. Generate Tokens
 
-````bash
+```bash
 vault token create -policy="frontend-readonly" -orphan -period=768h -display-name="frontend"
 vault token create -policy="backend-readonly" -orphan -period=768h -display-name="backend"
-````
+```
 
-> 📌 คัดลอก token ที่ได้ไว้ใช้งานฝั่ง Agent
+> 📌 Copy the generated token for Agent usage
 
-````bash
+```bash
 exit
-````
+```
 
 ---
 
-## 💻 Agent-Side Usage
+## 💻 Agent Usage
 
-### 1. เตรียม `.env.vault`
+Clone the renderer and set up:
+
+```bash
+git clone https://github.com/SuphasanManitsaDev/vault-dev.git
+mv vault-dev/vault-agent ./
+rm -rf vault-dev
+```
+
+### 1. Create `.env.vault`
 
 ```bash
 cp vault-agent/.env.vault.example vault-agent/.env.vault
 ```
 
-จากนั้นแก้ไขไฟล์ `.env.vault` ให้ใส่ค่า token และ server ของคุณ เช่น:
+Edit `vault-agent/.env.vault`:
 
-````env
+```env
 VAULT_ADDR=http://<your-server>:8200
 VAULT_TOKEN=hvs.xxxxxxxxxxxxxxxxx
 VAULT_ROLE=frontend
-````
+```
 
-> ✨ เปลี่ยน `VAULT_ROLE` เป็น `backend` ถ้าต้องการ pull จาก backend
+> ✨ Change `VAULT_ROLE` to `backend` to fetch backend secrets
 
 ---
 
-### 2. Run Script
+### 2. Run Renderer
 
-#### บน Linux / macOS
+#### Linux/macOS:
 
-````bash
+```bash
 ./vault-agent/render.sh
-````
+```
 
-#### บน Windows
+#### Windows:
 
-````cmd
+```cmd
 vault-agent\render.bat
-````
+```
 
-ระบบจะ:
-- สร้างไฟล์ `.vault-token` และ `template.tpl`
-- เรียก `Vault Agent` เพื่อดึง secrets
-- แปลงผลลัพธ์เป็นไฟล์ `.env`
+What it does:
+- Creates `.vault-token` and `template.tpl`
+- Runs Vault Agent to fetch and render secrets
+- Outputs to `.env` in the root directory
 
 ---
 
-## 📁 Project Structure
+## 📁 Folder Structure
 
 ```
 .
 ├── docker-compose.server.yml
 ├── README.md
 └── vault-agent/
-    ├── .env.vault              # สำหรับใช้จริง (ignore ด้วย .gitignore)
-    ├── .env.vault.example      # ตัวอย่างไฟล์ config
-    ├── agent.hcl               # Vault Agent config (ใช้ ${VAULT_ADDR})
-    ├── render.sh               # สคริปต์สำหรับ Linux/macOS
-    └── render.bat              # สคริปต์สำหรับ Windows
+    ├── .env.vault              # Actual config (ignored by Git)
+    ├── .env.vault.example      # Example config for setup
+    ├── agent.hcl               # Vault Agent configuration file
+    ├── render.sh               # Linux/macOS rendering script
+    └── render.bat              # Windows rendering script
 ```
 
 ---
 
-## ✅ ตัวอย่าง Output
+## ✅ Example Output
 
-เมื่อ `VAULT_ROLE=frontend`:
+When `VAULT_ROLE=frontend`:
 
-````env
+```env
 API_URL=http://frontend.com
 API_KEY=frontend-key
-````
+```
 
-หรือ `VAULT_ROLE=backend`:
+When `VAULT_ROLE=backend`:
 
-````env
+```env
 DB_URL=postgres://db
 BACKEND_KEY=super-secret
-````
+```
 
 ---
+
+## 🧠 Pro Tips
+
+- Extend the script to support multiple roles
+- Merge `.env` with `.env.local`
+- Integrate in CI pipelines (GitHub Actions, GitLab CI, etc.)
+
+---
+
+## 📄 License
+
+MIT © [Your Name]
