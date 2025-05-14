@@ -1,11 +1,5 @@
 # 🌐 Environment Variables
 .env
-vault-agent/.env.vault
-
-# 🔒 Vault Runtime Files
-vault-agent/vault/.vault-token
-vault-agent/vault/template.tpl
-vault-agent/vault/render.log
 
 # 🛠 OS / Editor Junk
 .DS_Store

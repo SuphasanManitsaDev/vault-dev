@@ -1,0 +1,13 @@
+# 🌐 Environment Variables
+.env.vault
+
+# 🔒 Vault Runtime Files
+vault/.vault-token
+vault/template.tpl
+vault/render.log
+
+# 🛠 OS / Editor Junk
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
