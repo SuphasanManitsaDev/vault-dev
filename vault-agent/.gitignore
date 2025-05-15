@@ -1,5 +1,6 @@
 # 🌐 Environment Variables
 .env.vault
+!.env.vault.example
 
 # 🔒 Vault Runtime Files
 vault/.vault-token
