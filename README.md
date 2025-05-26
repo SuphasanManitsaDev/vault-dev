@@ -38,6 +38,7 @@ export VAULT_TOKEN='root-token'
 
 vault kv put secret/frontend API_URL=http://frontend.com API_KEY=frontend-key
 vault kv put secret/backend DB_URL=postgres://db BACKEND_KEY=super-secret
+vault kv put secret/mobile API_URL=http://example.com
 ```
 
 ### 4. Create Policies
@@ -58,11 +59,20 @@ echo 'path "secret/data/backend" {
 }' > backend-readonly.hcl
 ```
 
+#### `mobile-readonly.hcl`
+
+```bash
+echo 'path "secret/data/mobile" {
+  capabilities = ["read", "list"]
+}' > mobile-readonly.hcl
+```
+
 Apply the policies:
 
 ```bash
 vault policy write frontend-readonly frontend-readonly.hcl
 vault policy write backend-readonly backend-readonly.hcl
+vault policy write mobile-readonly mobile-readonly.hcl
 ```
 
 ### 5. Generate Tokens
@@ -70,6 +80,7 @@ vault policy write backend-readonly backend-readonly.hcl
 ```bash
 vault token create -policy="frontend-readonly" -orphan -ttl=0 -display-name="frontend"
 vault token create -policy="backend-readonly" -orphan -ttl=0 -display-name="backend"
+vault token create -policy="mobile-readonly" -orphan -ttl=0 -display-name="mobile"
 ```
 
 > 📌 Copy the generated token for Agent usage
