@@ -46,7 +46,39 @@ cat > vault/template.tpl <<EOF
 EOF
 
 # ------------------------------------------------------------------------------
-# 🚀 Start Vault Agent in background and render secrets
+# 🐳 Pull Vault image if not exists
+# ------------------------------------------------------------------------------
+if [[ "$(docker images -q hashicorp/vault:latest 2> /dev/null)" == "" ]]; then
+  echo "📦 Vault image not found. Pulling from Docker Hub..."
+  docker pull hashicorp/vault:latest
+fi
+
+# ------------------------------------------------------------------------------
+# 🧮 Track run count for log file
+# ------------------------------------------------------------------------------
+LOG_FILE="vault/render.log"
+RUN_COUNT_FILE="vault/.run-count"
+RUN_COUNT=1
+
+if [[ -f $RUN_COUNT_FILE ]]; then
+  RUN_COUNT=$(( $(cat "$RUN_COUNT_FILE") + 1 ))
+fi
+
+echo "$RUN_COUNT" > "$RUN_COUNT_FILE"
+
+# ------------------------------------------------------------------------------
+# 🕒 Append header to log file with timestamp + run number
+# ------------------------------------------------------------------------------
+{
+  echo ""
+  echo "========================="
+  echo "🕒 $(date '+%Y-%m-%d %H:%M:%S')"
+  echo "🧪 Vault Render Run #$RUN_COUNT"
+  echo "========================="
+} >> "$LOG_FILE"
+
+# ------------------------------------------------------------------------------
+# 🚀 Start Vault Agent and log output
 # ------------------------------------------------------------------------------
 docker run --rm \
   --cap-add=IPC_LOCK \
@@ -54,14 +86,15 @@ docker run --rm \
   -w /vault/config/vault \
   -e VAULT_ADDR="$VAULT_ADDR" \
   hashicorp/vault:latest \
-  agent -config=/vault/config/agent.hcl > /dev/null 2>&1 &
+  agent -config=/vault/config/agent.hcl >> "$LOG_FILE" 2>&1 &
 
 VAULT_PID=$!
 
 # ------------------------------------------------------------------------------
-# ⏳ Wait up to 3 seconds for the .env file to be created
+# ⏳ Wait up to 10 seconds for the .env file to be created
 # ------------------------------------------------------------------------------
-for i in {1..3}; do
+WAIT_SECONDS=10
+for ((i=1; i<=WAIT_SECONDS; i++)); do
   if [[ -f vault/.env ]]; then
     mv vault/.env ../.env
     echo "✅ .env successfully rendered and moved"
@@ -77,5 +110,5 @@ done
 kill "$VAULT_PID" >/dev/null 2>&1 || true
 echo "❌ Failed to render .env within expected time"
 echo "🪵 See full logs at: vault/render.log"
-tail -n 1 vault/render.log
+tail -n 20 vault/render.log || echo "(no log found)"
 exit 1
