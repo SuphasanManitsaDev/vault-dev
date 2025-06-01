@@ -85,7 +85,7 @@ vault token create -policy="mobile-readonly" -orphan -ttl=0 -display-name="mobil
 
 > 📌 Copy the generated token for Agent usage
 
-หรือใช้ UI ก็ได้
+หรือใช้ UI ก็ได้ ไปที่ Tools > API Explorer แล้วเลือก POST /auth/token/create
 ```json
 {
   "policies": ["frontend-readonly"],
