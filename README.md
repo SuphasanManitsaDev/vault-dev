@@ -85,6 +85,17 @@ vault token create -policy="mobile-readonly" -orphan -ttl=0 -display-name="mobil
 
 > 📌 Copy the generated token for Agent usage
 
+หรือใช้ UI ก็ได้
+```json
+{
+  "policies": ["frontend-readonly"],
+  "no_parent": true,
+  "ttl": "0",
+  "display_name": "frontend"
+}
+```
+
+
 ```bash
 exit
 ```
